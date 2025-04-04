@@ -338,6 +338,9 @@ def lambda_X_gen(beta, S, I, n):
             lambda_X[i,j] = beta[i,j]*S[i]*I[j]/(n[j]**2)
     return lambda_X
 
+def time_dep_J_sir(X,t,betat):
+    pass
+
 def sir_4_int(X, t, betat, gamma, mu, delta):
     S = X[:4]
     I = X[4:8]
