@@ -22,7 +22,7 @@ def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
     while t < T_max:          
         beta_matrix = betat(t)
         # Compute event rates
-        infection_rates = beta_matrix @ I * S / N_population
+        infection_rates = (beta_matrix @ I) * S / N_population
         recovery_rates = gamma * I
         birth_death_rates = mu * (N_population-S)
         
@@ -109,8 +109,8 @@ def beta_newvar_t(t):
     if t < 15:
         return beta_matrix_low
     else:
-        temp = np.array([[0,0,0],[0,0,1],[0,0,1]])
-        return beta_matrix_low + 0.01*(t-15)*temp
+        temp = np.array([[0,0,0],[0,0,0.25],[0,0,1]])
+        return beta_matrix_low + 0.005*(t-15)*temp
 
 # Setup sims and output files
 if identity == 'constant':
@@ -128,9 +128,16 @@ elif identity == 'betdec':
     beta_t = beta_betdec_t
     def sim():
         return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
-else:
+elif identity == 'newvar':
     results_dir = os.path.join(script_dir,'newvar')
     beta_t = beta_newvar_t
+    def sim():
+        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+else:
+    results_dir = os.path.join(script_dir,'seed')
+    beta_t = betat
+    Ii = np.array([0,0,100])
+    Si = N_population - Ii
     def sim():
         return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 
