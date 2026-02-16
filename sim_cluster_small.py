@@ -13,8 +13,11 @@ def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
     times = np.zeros(70000)
     St = np.zeros((70000,3))
     It = np.zeros((70000,3))
+    Ct = np.zeros((70000,3))
     St[0,:] = np.copy(S)
     It[0,:] = np.copy(I)
+    C = np.copy(I)
+    Ct[0,:] = np.copy(C)
 
     # Gillespie algorithm
     t = 0
@@ -48,10 +51,13 @@ def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
             I[2] += 1
         elif rand < np.sum(infection_rates) + recovery_rates[0]:
             I[0] -= 1
+            C[0] += 1
         elif rand < np.sum(infection_rates) + recovery_rates[0] + recovery_rates[1]:
             I[1] -= 1
+            C[1] += 1
         elif rand < np.sum(infection_rates) + np.sum(recovery_rates):
             I[2] -= 1
+            C[2] += 1
         elif rand < np.sum(infection_rates) + np.sum(recovery_rates) + birth_death_rates[0]:
             if np.random.rand() < I[0]/(N_population - S[0]):
                 I[0] -= 1
@@ -67,8 +73,9 @@ def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
         # Store state
         St[ind,:] = S
         It[ind,:] = I
+        Ct[ind,:] = C
         times[ind] = t
-    return times[:ind+1], St[:ind+1], It[:ind+1]
+    return times[:ind+1], St[:ind+1], It[:ind+1], Ct[:ind+1]
 
 identity = sys.argv[2]
 num = int(sys.argv[1])
@@ -146,15 +153,19 @@ times = np.arange(0,100.1,0.1)
 num_sims = 100
 Is = np.zeros((num_sims,3,len(times)))
 Ss = np.zeros((num_sims,3,len(times)))
+Cs = np.zeros((num_sims,3,len(times)))
 for i in range(100):
     res = sim()
     Is[i,:,:] = np.array([np.interp(times,res[0],res[2][:,i]) for i in range(3)])
     Ss[i,:,:] = np.array([np.interp(times,res[0],res[1][:,i]) for i in range(3)])
+    Cs[i,:,:] = np.array([np.interp(times,res[0],res[3][:,i]) for i in range(3)])
 
 i = np.random.randint(100)
 
 fpath_I = os.path.join(results_dir,f'I_{num}_{i}.npy')
-fpath_R = os.path.join(results_dir,f'R_{num}_{i}.npy')
+fpath_S = os.path.join(results_dir,f'S_{num}_{i}.npy')
+fpath_C = os.path.join(results_dir,f'C_{num}_{i}.npy')
 
 np.save(fpath_I,Is)
-np.save(fpath_R,Ss)
+np.save(fpath_S,Ss)
+np.save(fpath_C,Cs)
