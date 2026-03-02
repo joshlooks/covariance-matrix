@@ -9,10 +9,10 @@ def gillespie_meta(N_cities, N_population, init_I, betat, gamma, mu, T_max):
     S = np.full(N_cities, N_population) - I  
 
     # Results arrays
-    times = np.zeros(70000)
-    St = np.zeros((70000,3))
-    It = np.zeros((70000,3))
-    Ct = np.zeros((70000,3))
+    times = np.zeros(700000)
+    St = np.zeros((700000,3))
+    It = np.zeros((700000,3))
+    Ct = np.zeros((700000,3))
     St[0,:] = np.copy(S)
     It[0,:] = np.copy(I)
     C = np.copy(I) 
@@ -93,7 +93,7 @@ b_b = 0.12
 beta_matrix = np.array([[b_w,b_b,0],[b_b,b_w,b_b],[0,b_b,b_w]])
 gamma = 0.1    
 mu = 1/(80*365)     
-N_population = 10000
+N_population = 100000  
 Ii = np.array([100,100,100])
 Si = N_population - Ii
 
@@ -125,23 +125,23 @@ def beta_newvar_t(t):
 
 # Setup sims and output files
 if identity == 'constant':
-    results_dir = os.path.join(script_dir,'constant_small')
+    results_dir = os.path.join(script_dir,'constant')
     beta_t = betat
     def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'indec':
-    results_dir = os.path.join(script_dir,'indec_small')
+    results_dir = os.path.join(script_dir,'indec')
     beta_t = beta_indec_t
     def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'betdec':
-    results_dir = os.path.join(script_dir,'betdec_small')
+    results_dir = os.path.join(script_dir,'betdec')
     beta_t = beta_betdec_t
     def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'newvar':
-    results_dir = os.path.join(script_dir,'newvar_small')
+    results_dir = os.path.join(script_dir,'newvar')
     beta_t = beta_newvar_t
     def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 else:
-    results_dir = os.path.join(script_dir,'seed_small')
+    results_dir = os.path.join(script_dir,'seed')
     beta_t = betat
     Ii = np.array([0,0,100])
     Si = N_population - Ii

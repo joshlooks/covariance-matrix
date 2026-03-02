@@ -1,13 +1,12 @@
 import sys
 import numpy as np
 import os
-from scipy.interpolate import interp1d
 
-def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
+def gillespie_meta(N_cities, N_population, init_I, betat, gamma, mu, T_max):
     np.random.seed()
     # Initialize state variables
-    I = np.copy(init_I)  # Initial infections per city
-    S = np.full(N_cities, N_population) - I  # Initial susceptibles per city
+    I = np.copy(init_I)  
+    S = np.full(N_cities, N_population) - I  
 
     # Results arrays
     times = np.zeros(700000)
@@ -16,7 +15,7 @@ def gillespie_meta(N_cities,N_population,init_I,betat,gamma,mu,T_max):
     Ct = np.zeros((700000,3))
     St[0,:] = np.copy(S)
     It[0,:] = np.copy(I)
-    C = np.copy(I)
+    C = np.copy(I) 
     Ct[0,:] = np.copy(C)
 
     # Gillespie algorithm
@@ -82,14 +81,14 @@ num = int(sys.argv[1])
 script_dir = os.path.dirname(__file__)
 
 # Parameters
-N_cities = 3   # Number of cities
-T_max = 100    # Maximum time
-b_w = 0.231  # Transmission within each city
-b_b = 0.12 # Transmission between cities
+N_cities = 3   
+T_max = 100    
+b_w = 0.231  
+b_b = 0.12 
 beta_matrix = np.array([[b_w,b_b,0],[b_b,b_w,b_b],[0,b_b,b_w]])
-gamma = 0.1    # Recovery rate
-mu = 1/(80*365)     # Birth and death rate
-N_population = 100000  # Population per city
+gamma = 0.1    
+mu = 1/(80*365)     
+N_population = 100000  
 Ii = np.array([100,100,100])
 Si = N_population - Ii
 
@@ -123,49 +122,47 @@ def beta_newvar_t(t):
 if identity == 'constant':
     results_dir = os.path.join(script_dir,'constant')
     beta_t = betat
-    def sim():
-        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+    def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'indec':
     results_dir = os.path.join(script_dir,'indec')
     beta_t = beta_indec_t
-    def sim():
-        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+    def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'betdec':
     results_dir = os.path.join(script_dir,'betdec')
     beta_t = beta_betdec_t
-    def sim():
-        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+    def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 elif identity == 'newvar':
     results_dir = os.path.join(script_dir,'newvar')
     beta_t = beta_newvar_t
-    def sim():
-        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+    def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 else:
     results_dir = os.path.join(script_dir,'seed')
     beta_t = betat
     Ii = np.array([0,0,100])
     Si = N_population - Ii
-    def sim():
-        return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
+    def sim(): return gillespie_meta(N_cities,N_population,Ii,beta_t,gamma,mu,T_max)
 
-# Run number of sims
-times = np.arange(0,100.1,0.1)
+os.makedirs(results_dir, exist_ok=True)
+
+times = np.arange(0, 100.1, 0.1)
+target_days = np.arange(0, 101, 1)
 num_sims = 100
-Is = np.zeros((num_sims,3,len(times)))
-Ss = np.zeros((num_sims,3,len(times)))
-Cs = np.zeros((num_sims,3,len(times)))
-for i in range(100):
+Is = np.zeros((num_sims, 3, len(times)))
+Ss = np.zeros((num_sims, 3, len(times)))
+Cs = np.zeros((num_sims, 3, len(times)))
+Cs_days = np.zeros((num_sims, 3, len(target_days)))
+for i in range(num_sims):
+    event_times, St, It, Ct = sim()
     res = sim()
     Is[i,:,:] = np.array([np.interp(times,res[0],res[2][:,i]) for i in range(3)])
     Ss[i,:,:] = np.array([np.interp(times,res[0],res[1][:,i]) for i in range(3)])
     Cs[i,:,:] = np.array([np.interp(times,res[0],res[3][:,i]) for i in range(3)])
 
-i = np.random.randint(100)
+file_id = np.random.randint(100)
+fpath_I = os.path.join(results_dir, f'I_{num}_{file_id}.npy')
+fpath_S = os.path.join(results_dir, f'S_{num}_{file_id}.npy')
+fpath_C = os.path.join(results_dir, f'C_{num}_{file_id}.npy')
 
-fpath_I = os.path.join(results_dir,f'I_{num}_{i}.npy')
-fpath_S = os.path.join(results_dir,f'S_{num}_{i}.npy')
-fpath_C = os.path.join(results_dir,f'C_{num}_{i}.npy')
-
-np.save(fpath_I,Is)
-np.save(fpath_S,Ss)
-np.save(fpath_C,Cs)
+np.save(fpath_I, Is)
+np.save(fpath_S, Ss)
+np.save(fpath_C, Cs)
